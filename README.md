@@ -65,3 +65,9 @@ gcloud compute instances create $INSTANCE_NAME \
         * `gcloud compute instances delete $INSTANCE_NAME`
 
 ## Connect with github repo
+```
+cd ~
+git clone https://github.com/rbiswasfc/nlp-deployments.git
+cd nlp-deployments
+git status
+```
