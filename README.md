@@ -71,3 +71,5 @@ git clone https://github.com/rbiswasfc/nlp-deployments.git
 cd nlp-deployments
 git status
 ```
+
+## Train a ML model in jupyter notebook using pytorch
