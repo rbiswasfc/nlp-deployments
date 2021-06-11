@@ -81,6 +81,7 @@ cd nlp-deployments
 git status
 ```
 
+<<<<<<< HEAD
 ## Create Google Cloud Bucket & upload model
 * In GCP go to storage -> cloud storage -> browser
 * Click on create bucket and follow the instructions
@@ -110,3 +111,6 @@ git status
 * In the GCP Console, go to the create service account key page
 
 ## Authentication confirms that users are who they say they are. Authorization gives those users permission to access a resource.
+=======
+## Train a ML model in jupyter notebook using pytorch
+>>>>>>> f5a80b83544d70149b93bab3371eb50455ed84cf
