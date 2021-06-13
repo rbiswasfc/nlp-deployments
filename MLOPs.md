@@ -86,3 +86,84 @@ User-facing application requirements
 * Labelling
     * Instruction ambiguity
     * Consistency
+
+
+## LINUX Commands
+### Curl
+* Curl command allows us to query urls from the command line
+* In addition to making typical get requests, we can post form data, authenticate users, save responses to file in our system
+* Particularly useful when testing REST APIs (CRUD Operations)
+* Examples
+    * `curl https://rbiswasfc.github.io/`
+        * This will fetch the html response from this site and display on screen
+    * `curl -i https://rbiswasfc.github.io/`
+        * This will include the response header as well. The `-i` flag stands for --include
+    * `curl -d "first=Raja&last=Biswas" https://rbiswasfc.github.io/`
+        * This submits a POST requests with data specified by the -d flag 
+    * `curl -X PUT -d "first=Rana&last=Biswas" https://rbiswasfc.github.io/`
+        * This will send a PUT request to the site server 
+
+    * `curl -u username:password https://github.com/rbiswasfc/`
+        * This can be used to authenticate a user to a server
+    * `curl -o tmp.html https://rbiswasfc.github.io/`
+        * This will download the response contents to tmp.html file. The `-o` flag here stands for output
+
+### htop
+[Reference](https://www.deonsworld.co.za/2012/12/20/understanding-and-using-htop-monitor-system-resources/)
+
+`htop` is an interactive and real time process monitoring application which will show you your usage per cpu/core, as well as a meaningful text graph of your memory and swap usage.
+
+* To install htop run the following
+    * `brew install htop`
+* CPU usage color bar [Defaults]
+    * blue - low priority processes (nice >0)
+    * green - normal (user) processes
+    * red - kernel processes
+    * cyan - virtualliz
+* Memory color code bar
+    * green - used
+    * blur - buffer
+    * yellow - cache
+* Process stats
+    * R - running
+    * S - sleeping
+    * Z - zombie
+    * T - traced/stopped
+    * D - disk sleep
+* Load average
+    *  The system load is a measure of the amount of computational work that a computer system performs
+    * For example,  4.0 on a quad core represents 100% utilization. Anything under a 4.0 load average for a quad-core is ok as the load is distributed over the 4 cores.
+    * The first number is a 1 minute load average, second is 5 minutes load average and the third is 15 minutes load average.
+* Uptime
+    * Uptime shows how long the system has been running
+
+
+* NI
+    * The nice value of the process, from 19 (low priority) to -20 (high priority). 
+    * A high value means, the process is being nice, letting other have relative high priority. The OS permission restrictions for adjusting priority apply.
+    * A niceness level increase by 1 should yield a 10% more CPU time to the process
+* PRI
+    * Kernel's internal priority of the process, usually just its nice value plus 20. Different for real time processes.
+    *  Priorities range from 0 to 139 and the range from 0 to 99 is real time and 100 to 139 for users. (TODO: check)
+* VIRT
+    * The size of virtual memory for the process
+    * It is the sum of memory it is actually using, memory it has mapped into itself e.g. 
+        * The video card's RAM for the X server
+        * files on disk that have been mapped into it e.g. shared library
+        * memory shared with other processes
+* RES
+    * The resident set size of the process (text + data + stack). The size of processes used physical memory.
+    * This also corresponds directly to the %MEM column
+* SHR
+    * The size of processes shared pages
+
+* Usage
+    * Scroll the process list horizontally and vertically using the arrow keys
+    * Kill a process by pressing the F9 key
+    * Re-nice a process by pressing the F7 or F8 keys
+    * List open files used by a process by pressing the `l` key
+    * Display only processes of a single user by pressing the `u` key
+    * Display processes sorted by any htop column by pressing the F6 key
+    * Display processes in a tree view by pressing the F5 key
+
+
