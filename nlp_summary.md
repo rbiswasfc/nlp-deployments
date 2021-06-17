@@ -58,4 +58,11 @@ Idea:
 Let's denote the embedding of a word (`w`) as
 * `u_w` when `w` is context word
 * `v_w` when `w` is center word
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}" title="\Large x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}" />
+Now probability of concent word given the center word can be written as
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=P(o|c)&space;=&space;\frac{\text{exp}(v_{c}^{T}u_o)}{\sum_{w&space;\in&space;V}&space;\text{exp}(v_{c}^{T}u_w)}"
+
+This uses three concepts
+* Dot product to capture similarity between two words 
+* Exponentiation to make any real number positive
+* Softmax function to convert an arbitrary vector to probability distribution 
