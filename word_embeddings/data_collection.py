@@ -1,4 +1,5 @@
 import json
+import logging
 import traceback
 import pandas as pd
 
@@ -6,7 +7,22 @@ from functools import wraps
 from bs4 import BeautifulSoup
 from elsapy.elsclient import ElsClient
 from elsapy.elssearch import ElsSearch
+from pandas.core.arrays.string_ import StringArray
 from scraper_api import ScraperAPIClient
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter(
+    "%(asctime)s:%(levelname)s:%(name)s:%(funcName)s:%(message)s", "%Y-%m-%d %H:%M:%S"
+)
+
+file_handler = logging.FileHandler("data_collection_run.log")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 
 def try_except(func):
@@ -25,7 +41,8 @@ def try_except(func):
             value = func(*args, **kwargs)
             return value
         except Exception:
-            traceback.print_exc()
+            # traceback.print_exc()
+            logger.exception("Exception in running {}".format(func.__name__))
             return None
 
     return wrapper
@@ -46,12 +63,13 @@ def get_article_metadata(client, query, start_year=2015, filepath="data/temp.csv
     :return dataframe with retrieved article details
     """
     query += "AND PUBYEAR > {}".format(str(start_year))
+    logger.info("Fetching metadata with query {}".format(query))
     doc_search = ElsSearch(query, "scopus")
     doc_search.execute(client, get_all=False)
     if len(doc_search.results) <= 1:
-        print("No result found")
+        logger.warning("No result found")
         return pd.DataFrame()
-    print("# of article retrieved: {}".format(len(doc_search.results)))
+    logger.info("# of article retrieved: {}".format(len(doc_search.results)))
 
     # save doc search results
     # with open(filepath, "w") as f:
@@ -61,20 +79,27 @@ def get_article_metadata(client, query, start_year=2015, filepath="data/temp.csv
 
     article_dict = dict()
     for idx, article in enumerate(doc_search.results):
-        tmp_dict = dict()
-        tmp_dict["scopus_id"] = int(article["prism:url"].split("/")[-1])
-        tmp_dict["title"] = article["dc:title"]
-        tmp_dict["first_author"] = article["dc:creator"]
-        tmp_dict["affiliation"] = [item["affilname"] for item in article["affiliation"]]
-        tmp_dict["publication_name"] = article["prism:publicationName"]
-        tmp_dict["publication_date"] = article["prism:coverDate"]
-        tmp_dict["citation_count"] = article["citedby-count"]
-        for link in article["link"]:
-            if link["@ref"] == "scopus":
-                tmp_dict["abstract_link"] = link["@href"]
-            elif link["@ref"] == "scopus-citedby":
-                tmp_dict["cited_by_link"] = link["@href"]
-        article_dict[idx] = tmp_dict
+        try:
+            tmp_dict = dict()
+            tmp_dict["scopus_id"] = int(article["prism:url"].split("/")[-1])
+            tmp_dict["title"] = article["dc:title"]
+            tmp_dict["first_author"] = article["dc:creator"]
+            tmp_dict["affiliation"] = [
+                item["affilname"] for item in article["affiliation"]
+            ]
+            tmp_dict["publication_name"] = article["prism:publicationName"]
+            tmp_dict["publication_date"] = article["prism:coverDate"]
+            tmp_dict["citation_count"] = article["citedby-count"]
+            for link in article["link"]:
+                if link["@ref"] == "scopus":
+                    tmp_dict["abstract_link"] = link["@href"]
+                elif link["@ref"] == "scopus-citedby":
+                    tmp_dict["cited_by_link"] = link["@href"]
+            article_dict[idx] = tmp_dict
+        except Exception:
+            logger.exception("Exception article parsing...")
+            logger.debug(article)
+
     df = pd.DataFrame(article_dict).T
     df.to_csv(filepath, index=False)
     return df
@@ -215,13 +240,43 @@ class ArticleDataExtractor:
         return article
 
 
-if __name__ == "__main__":
-    ## Load configuration
+def prepare_dataset():
+    """
+    prepare dataset of academic articles
+
+    :return: dataset
+    :rtype: pd.DataFrame
+    """
     with open("config.json") as f:
         config = json.load(f)
 
-    ## Initialize client
-    this_client = ElsClient(config["apikey"])
+    ## Initialize clients
+    elsevier_client = ElsClient(config["elsevier_apikey"])
+    scraper_client = ScraperAPIClient(config["scraper_apikey"])
 
-    search_query = "TITLE-ABS-KEY ( FE  AND NN )"
-    get_article_metadata(this_client, search_query)
+    search_queries = [
+        "TITLE-ABS-KEY ( localizing  AND gradient  AND damage  AND model )",  # 21 results
+        "TITLE-ABS-KEY ( micromorphic  AND computational ) ",  # 58 results
+        "TITLE-ABS-KEY ( ultra  AND high  AND performance  AND concrete  AND projectile  AND impact )",  # 76 articles
+    ]
+
+    logger.info("=" * 30)
+    logger.info("Stage 1 >>>>>")
+    logger.info("Extacting metadata....")
+    meta_list = []
+    for query in search_queries:
+        this_df = get_article_metadata(elsevier_client, query)
+        # logger.info(this_df.head())
+        meta_list.append(this_df)
+    df_metadata = pd.concat(meta_list).reset_index()
+    df_metadata = df_metadata.drop_duplicates(subset=["scopus_id"])
+    logger.info("# of articles found = {}".format(len(df_metadata)))
+    logger.info("Metadata extraction completed.")
+    logger.info("=" * 30)
+
+    return df_metadata
+
+
+if __name__ == "__main__":
+    df = prepare_dataset()
+
