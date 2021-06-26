@@ -1,5 +1,11 @@
 .vscode
 .ipynb_checkpoints/
 pytorch-tutorials/data
+*.ipynb
+**/__pycache__/
+*.pyc
+*.json
+*.csv
+*.log
 
 

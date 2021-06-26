@@ -55,9 +55,10 @@ Idea:
 * Keep adjusting the word vectors to maximize this probability
 
 ### How to compute probability of a context word given the center word?
-Let's denote the embedding of a word (`w`) as
-* `u_w` when `w` is context word
-* `v_w` when `w` is center word
+Let's denote the embedding of a word as
+* `u_w` when word `w` is context word
+* `v_w` when word `w` is center word
+
 Now probability of concent word given the center word can be written as
 
 <img src="https://latex.codecogs.com/svg.latex?P(o|c)&space;=&space;\frac{\text{exp}(v_{c}^{T}u_o)}{\sum_{w&space;\in&space;V}&space;\text{exp}(v_{c}^{T}u_w)}" title="P(o|c)&space;=&space;\frac{\text{exp}(v_{c}^{T}u_o)}{\sum_{w&space;\in&space;V}&space;\text{exp}(v_{c}^{T}u_w)}" />
