@@ -1,8 +1,10 @@
 import json
+import uuid
 import logging
 import traceback
 import pandas as pd
 
+from tqdm import tqdm
 from functools import wraps
 from bs4 import BeautifulSoup
 from elsapy.elsclient import ElsClient
@@ -253,13 +255,16 @@ def prepare_dataset():
     ## Initialize clients
     elsevier_client = ElsClient(config["elsevier_apikey"])
     scraper_client = ScraperAPIClient(config["scraper_apikey"])
+    file_uuid = uuid.uuid4().hex
 
-    search_queries = [
-        "TITLE-ABS-KEY ( localizing  AND gradient  AND damage  AND model )",  # 21 results
-        "TITLE-ABS-KEY ( micromorphic  AND computational ) ",  # 58 results
-        "TITLE-ABS-KEY ( ultra  AND high  AND performance  AND concrete  AND projectile  AND impact )",  # 76 articles
-    ]
+    # search_queries = [
+    #     "TITLE-ABS-KEY ( localizing  AND gradient  AND damage  AND model )",  # 21 results
+    #     "TITLE-ABS-KEY ( micromorphic  AND computational ) ",  # 58 results
+    #     "TITLE-ABS-KEY ( ultra  AND high  AND performance  AND concrete  AND projectile  AND impact )",  # 76 articles
+    # ]
+    search_queries = config["queries"]
 
+    # get metadata
     logger.info("=" * 30)
     logger.info("Stage 1 >>>>>")
     logger.info("Extacting metadata....")
@@ -274,9 +279,39 @@ def prepare_dataset():
     logger.info("Metadata extraction completed.")
     logger.info("=" * 30)
 
-    return df_metadata
+    # get additional data
+    max_calls = 3000
+    num_sample = min(max_calls, len(df_metadata))
+    df_metadata = df_metadata.sample(num_sample)
+    df_metadata.to_csv("data/scopus_metadata_{}.csv".format(file_uuid), index=False)
+    logger.info("Stage 2 >>>>>>")
+    logger.info("Extracting additional data...")
+    all_articles = dict()
+    data_extractor = ArticleDataExtractor(scraper_client)
+
+    batch_size = 3
+    n_batch = int(len(df_metadata) / batch_size) + 1
+    for i in tqdm(range(n_batch)):
+        start, end = i * batch_size, (i + 1) * batch_size
+        tmp_df = df_metadata.iloc[start:end].copy()
+
+        for _, row in tmp_df.iterrows():
+            article_id, article_url = row.scopus_id, row.abstract_link
+            logger.debug("Extracting info from {}".format(article_url))
+            this_article = data_extractor.execute(article_url)
+            this_article["article_id"] = article_id
+            all_articles[uuid.uuid4().hex] = this_article
+        df_data = pd.DataFrame(all_articles).T.reset_index(drop=True)
+        # save intermediate result
+        file_path = "data/scrapper_data_{}.csv".format(file_uuid)
+        df_data.to_csv(file_path, index=False)
+
+    logger.info("Stage 2 complete")
+    logger.info("=" * 30)
+
+    return df_metadata, df_data
 
 
 if __name__ == "__main__":
-    df = prepare_dataset()
+    df_1, df_2 = prepare_dataset()
 
