@@ -8,5 +8,6 @@ pytorch-tutorials/data
 *.csv
 *.log
 *.pkl
+*.png
 
 

@@ -201,7 +201,7 @@ class ArticleDataExtractor:
         return article
 
 
-def prepare_dataset():
+def fetch_dataset():
     """
     prepare dataset of academic articles
 
@@ -272,5 +272,5 @@ def prepare_dataset():
 
 
 if __name__ == "__main__":
-    df_1, df_2 = prepare_dataset()
+    df_1, df_2 = fetch_dataset()
 
