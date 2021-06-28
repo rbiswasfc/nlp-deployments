@@ -1,53 +1,17 @@
 import json
 import uuid
 import logging
-import traceback
 import pandas as pd
 
 from tqdm import tqdm
-from functools import wraps
 from bs4 import BeautifulSoup
 from elsapy.elsclient import ElsClient
 from elsapy.elssearch import ElsSearch
-from pandas.core.arrays.string_ import StringArray
 from scraper_api import ScraperAPIClient
+from utils import try_except, setup_logger
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    "%(asctime)s:%(levelname)s:%(name)s:%(funcName)s:%(message)s", "%Y-%m-%d %H:%M:%S"
-)
-
-file_handler = logging.FileHandler("data_collection_run.log")
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
-
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
-
-
-def try_except(func):
-    """
-    A decorator for exception handing
-
-    :param func: function for which exception handing will be performed
-    :type func: function
-    :return: wrapped function
-    :rtype: function
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            value = func(*args, **kwargs)
-            return value
-        except Exception:
-            # traceback.print_exc()
-            logger.exception("Exception in running {}".format(func.__name__))
-            return None
-
-    return wrapper
+logger = setup_logger(logger)
 
 
 def get_article_metadata(client, query, start_year=2015, filepath="data/temp.csv"):
@@ -72,12 +36,6 @@ def get_article_metadata(client, query, start_year=2015, filepath="data/temp.csv
         logger.warning("No result found")
         return pd.DataFrame()
     logger.info("# of article retrieved: {}".format(len(doc_search.results)))
-
-    # save doc search results
-    # with open(filepath, "w") as f:
-    #    json.dump(doc_search.results, f)
-
-    # data cleaning
 
     article_dict = dict()
     for idx, article in enumerate(doc_search.results):
@@ -122,6 +80,7 @@ class ArticleDataExtractor:
         self.client = client
         self.soup = BeautifulSoup()
 
+    @try_except(logger)
     def fetch_data(self, url):
         """
         fetch data from the web using scraper api
@@ -135,7 +94,7 @@ class ArticleDataExtractor:
         self.soup = BeautifulSoup(result.text)
         return result.status_code
 
-    @try_except
+    @try_except(logger)
     def _get_title(self):
         """
         Get article title
@@ -145,7 +104,7 @@ class ArticleDataExtractor:
         """
         return self.soup.title.text.split("Document details -")[-1].strip()
 
-    @try_except
+    @try_except(logger)
     def _get_abstract(self):
         """
         Get article abstract
@@ -157,7 +116,7 @@ class ArticleDataExtractor:
         abstract = "".join([para.text.strip() for para in tmp.findAll("p")])
         return abstract
 
-    @try_except
+    @try_except(logger)
     def _get_authors(self):
         """
         Get article authors
@@ -171,7 +130,7 @@ class ArticleDataExtractor:
         ]
         return authors
 
-    @try_except
+    @try_except(logger)
     def _get_author_keywords(self):
         """
         Get article keywords as specified by authors
@@ -183,7 +142,7 @@ class ArticleDataExtractor:
         author_kws = [kw.text.strip() for kw in tmp.findAll("span")]
         return author_kws
 
-    @try_except
+    @try_except(logger)
     def _get_index_keywords(self):
         """
         Get article keywords as specified by scopus
@@ -195,7 +154,7 @@ class ArticleDataExtractor:
         index_kws = [kw.text.strip() for kw in tmp.findAll("span", class_="badges")]
         return index_kws
 
-    @try_except
+    @try_except(logger)
     def _get_citedby_articles(self):
         """
         Get a sample of recent articles which cites the current article
