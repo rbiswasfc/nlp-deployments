@@ -238,12 +238,12 @@ if __name__ == "__main__":
         print(path)
 
     an.get_network_stats()
-    members = an.get_community_members(community_idx=25)
+    members = an.get_community_members(community_idx=35)
     print(members)
     an.plot_subnetwork(members)
 
     # topics = an.get_community_topics(community_idx=25)
     # print(topics)
 
-    topics = an.get_community_topics(community_idx=1)
+    topics = an.get_community_topics(community_idx=35)
     print(topics)
