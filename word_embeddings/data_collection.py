@@ -248,7 +248,7 @@ def fetch_dataset():
     all_articles = dict()
     data_extractor = ArticleDataExtractor(scraper_client)
 
-    batch_size = 3
+    batch_size = 10
     n_batch = int(len(df_metadata) / batch_size) + 1
     for i in tqdm(range(n_batch)):
         start, end = i * batch_size, (i + 1) * batch_size

@@ -5,6 +5,7 @@ import unicodedata
 import traceback
 import pandas as pd
 from functools import wraps
+from pathlib import Path
 
 
 def setup_logger(logger):
@@ -145,11 +146,17 @@ def remove_punctuation(text):
     :rtype: str
     """
     try:
-        remove_digits = str.maketrans("", "", string.punctuation)
-        return text.translate(remove_digits)
+        remove_punctuations = str.maketrans("", "", string.punctuation)
+        return text.translate(remove_punctuations)
     except Exception:
         traceback.print_exc()
         return text
+
+
+def split_and_combine(text):
+    res = " ".join(text.split("-"))
+    res = " ".join(res.split("."))
+    return res
 
 
 def perform_lowercasing(text):
@@ -182,6 +189,19 @@ def compose(*funcs):
 
 
 preprocess_fn = compose(
-    perform_lowercasing, remove_punctuation, remove_numbers, unicode_to_ascii
+    perform_lowercasing,
+    remove_punctuation,
+    remove_numbers,
+    split_and_combine,
+    unicode_to_ascii,
 )
+
+
+def check_create_dir(dir_path):
+    """
+    check if folder exists at a specific path, if not create the directory
+    :param dir_path: path to the directory to be created
+    :type dir_path: str
+    """
+    Path(dir_path).mkdir(parents=True, exist_ok=True)
 

@@ -172,6 +172,27 @@ class ArticleCorpus:
         else:
             return self.get_random_context(window)
 
+    def sample_negative_words(self, num_negative=16):
+        """
+        sample negative words for training of skip gram models
+
+        :param num_negative: negative sample size, defaults to 8
+        :type num_negative: int, optional
+        """
+        normalizing_factor = 0
+        sampling_probs = np.zeros(self._vocab_size)
+        for i, (_, v) in enumerate(self._word_to_freq.items()):
+            normalizing_factor += v ** 0.75
+            sampling_probs[i] = v ** 0.75
+        sampling_probs /= normalizing_factor
+        while True:
+            result = []
+            sample = np.random.multinomial(num_negative, sampling_probs)
+            for idx, count in enumerate(sample):
+                for _ in range(count):
+                    result.append(idx)
+            yield result
+
 
 if __name__ == "__main__":
     df = pd.read_pickle("./data/processed_dataset.pkl")

@@ -9,5 +9,8 @@ pytorch-tutorials/data
 *.log
 *.pkl
 *.png
+*.npy
+**/datasets/
+*.pickle
 
 
