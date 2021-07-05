@@ -7,7 +7,7 @@ class IWordEmbedding(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def create_embeddings(self, corpus):
+    def build_embeddings(self, corpus):
         """
         abstract method enforcing training of word embedding functionality
 
